@@ -151,3 +151,5 @@ LOGOUT_REDIRECT_URL = '/users/login/'
 
 SESSION_COOKIE_AGE = 1209600  # Two weeks
 SESSION_SAVE_EVERY_REQUEST = True  # Save session with each request
+
+STATIC_URL = '/static/'
