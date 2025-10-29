@@ -92,7 +92,7 @@ def update_task(request, id):
 @csrf_exempt
 def delete_task(request, id):
     if request.method == "DELETE":
-        task = get_object_or_404(Task, id=id)  # Fetch the task by ID or return a 404 if not found
-        task.delete()  # Delete the task from the database
+        task = get_object_or_404(Task, id=id)
+        task.delete()
         return JsonResponse({"message": "Task deleted successfully."})
     return HttpResponseNotAllowed(["DELETE"])
