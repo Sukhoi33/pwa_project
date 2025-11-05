@@ -37,6 +37,7 @@ AUTHENTICATION_BACKENDS = (
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'tasks',
     'users',
     'django.contrib.sites',
@@ -53,6 +54,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -76,6 +78,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'tasks.context_processors.username',
             ],
         },
     },
@@ -153,3 +156,11 @@ SESSION_COOKIE_AGE = 1209600  # Two weeks
 SESSION_SAVE_EVERY_REQUEST = True  # Save session with each request
 
 STATIC_URL = '/static/'
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # React development server
+]
+
+STATICFILES_DIRS = [
+    BASE_DIR / "tasks" / "static" / "tasks" / "build" / "static",
+]
