@@ -1,0 +1,91 @@
+{% extends "tasks/layout.html" %}
+{% block content %}
+<h1>Modify Task</h1>
+
+<!-- Dropdown to select a task -->
+<label for="task-select">Select a Task:</label>
+<select id="task-select">
+    <option value="">-- Select a Task --</option>
+    {% for task in tasks %}
+    <option value="{{ task.id }}">{{ task.name }}</option>
+    {% endfor %}
+</select>
+
+<!-- Form to update the selected task -->
+<form id="modify-form" style="display: none;">
+    {% csrf_token %}
+    <label for="task-name">Task Name:</label>
+    <input type="text" id="task-name" name="name" required><br>
+
+    <label for="task-description">Description:</label>
+    <textarea id="task-description" name="description" rows="4"></textarea><br>
+
+    <label for="task-due-date">Due Date:</label>
+    <input type="date" id="task-due-date" name="due_date"><br>
+
+    <label for="task-completed">Completed:</label>
+    <input type="checkbox" id="task-completed" name="completed"><br>
+
+    <button type="submit">Update Task</button>
+</form>
+
+<a href="{% url 'tasks:index' %}">Back to Task List</a>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const taskSelect = document.getElementById('task-select');
+    const form = document.getElementById('modify-form');
+
+    // When a task is selected, fetch its details and populate the form
+    taskSelect.addEventListener('change', async () => {
+        const taskId = taskSelect.value;
+        console.log("Task selected:", taskId); //debugging log
+        if (!taskId) {
+            form.style.display = 'none';
+            return;
+        }
+
+        // Fetch task details from the server
+        const response = await fetch(`/tasks/api/tasks/${taskId}/`);
+        
+        if (response.ok) {
+            console.log('Fetched task details successfully');
+            const task = await response.json();
+            document.getElementById('task-name').value = task.name;
+            document.getElementById('task-description').value = task.description || '';
+            document.getElementById('task-due-date').value = task.due_date || '';
+            document.getElementById('task-completed').checked = task.completed;
+            
+            form.style.display = 'block';
+
+            // Attach the submit event to send a PUT request
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                const formData = {
+                    name: document.getElementById('task-name').value,
+                    description: document.getElementById('task-description').value,
+                    due_date: document.getElementById('task-due-date').value,
+                    completed: document.getElementById('task-completed').checked,
+                };
+
+                const updateResponse = await fetch(`/tasks/api/tasks/update/${taskId}/`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: JSON.stringify(formData),
+                });
+
+                if (updateResponse.ok) {
+                    alert('Task updated successfully!');
+                    location.reload();
+                } else {
+                    alert('Failed to update task.');
+                }
+            };
+        }
+    });
+});
+</script>
+{% endblock %}

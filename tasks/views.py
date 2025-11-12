@@ -52,13 +52,14 @@ def add(request):
 
 # API View to Get a List of Tasks
 def get_tasks(request):
-    tasks = Task.objects.all().values("id", "name", "completed")  # Get all tasks from the database
+    tasks = Task.objects.all().values("id", "name", "description", "due_date", "completed")  # Get all tasks from the database
     return JsonResponse(list(tasks), safe=False)  # Return tasks as JSON
 
 # API View to Get a Specific Task
 def get_task(request, id):
     task = get_object_or_404(Task, id=id)  # Fetch a specific task by ID or return a 404 if not found
-    return JsonResponse({"id": task.id, "name": task.name, "completed": task.completed})
+    return JsonResponse({"id": task.id, "name": task.name, "description": task.description, "due_date": task.due_date.strftime('%Y-%m-%d') if task.due_date else None, "completed": task.completed})
+    # Date formatted as 'YYYY-MM-DD' or None if no due date
 
 # API View to Create a New Task
 @csrf_exempt  # To allow POST requests without CSRF protection for the sake of API
@@ -81,9 +82,13 @@ def update_task(request, id):
         data = json.loads(request.body)
         task_name = data.get("name", task.name)  # Default to existing name if not provided
         completed = data.get("completed", task.completed)  # Default to existing completed status if not provided
-        # Update task fields
-        task.name = task_name
-        task.completed = completed
+        
+        # Update task fields with provided data or keep existing values
+        task.name = data.get("name", task.name)
+        task.description = data.get("description", task.description)
+        task.due_date = data.get("due_date", task.due_date)
+        task.completed = data.get("completed", task.completed)
+
         task.save()  # Save the updated task to the database
         return JsonResponse({"message": "Task updated successfully", "task": {"id": task.id, "name": task.name, "completed": task.completed}})
     return HttpResponseNotAllowed(["PUT", "PATCH"])
@@ -96,3 +101,10 @@ def delete_task(request, id):
         task.delete()
         return JsonResponse({"message": "Task deleted successfully."})
     return HttpResponseNotAllowed(["DELETE"])
+
+# Modify View - Page to modify existing tasks
+def modify(request):
+    tasks = Task.objects.all()  # Fetch all tasks from the database
+    return render(request, "tasks/modify.html", {
+        "tasks": tasks  # Pass tasks to the template
+    })
