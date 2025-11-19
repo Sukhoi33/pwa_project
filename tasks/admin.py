@@ -1,7 +1,13 @@
 from django.contrib import admin
-from .models import Task
-#admin.site.register(Task)
+from .models import Task, Category
 
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'parent')
+    list_filter = ('parent',)
+    search_fields = ('name',)
+    ordering = ('parent__name', 'name')
+
+admin.site.register(Category, CategoryAdmin)
 
 # Create a custom admin class for Task so you can see the created_at field and other other features in admin
 class TaskAdmin(admin.ModelAdmin):

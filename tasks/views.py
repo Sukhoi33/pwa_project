@@ -5,42 +5,12 @@ from django.urls import reverse
 from .models import Task
 from django.views.decorators.csrf import csrf_exempt
 import json
+from .forms import NewTaskForm
+from .models import Category
 
-# Form class for adding a new task
-class NewTaskForm(forms.Form):
-    task = forms.CharField(
-        label='New task:',  
-        widget=forms.TextInput(attrs={
-            'autofocus': 'autofocus', 
-            'id': 'task', 
-            'placeholder': 'New Task'
-        })
-    )
-    description = forms.CharField(
-        label='Description',
-        required=False,
-        widget=forms.Textarea(attrs={
-            'placeholder': 'Optional description',
-            'rows': 7
-        })
-    )
-    due_date = forms.DateField(
-        label='Due date of task',
-        widget=forms.DateInput(attrs={
-            'type': 'date',  # This ensures a date picker is shown in modern browsers
-            'placeholder': 'YYYY-MM-DD',
-            'class': 'datepicker',  # You can add CSS classes if needed
-        })
-     )
-    completed = forms.BooleanField(required=False)
-
-# Index View - Home page showing task list
 def index(request):
-    # Fetch all tasks from the database to display them
-    tasks = Task.objects.all()
-    return render(request, "tasks/index.html", {
-        "tasks": tasks  # Pass tasks to the template
-    })
+    categories = Category.objects.filter(parent=None).prefetch_related('subcategories', 'tasks')
+    return render(request, "tasks/index.html", {"categories": categories})
 
 # Modify View - Page to modify existing tasks
 def modify(request):
@@ -55,18 +25,13 @@ def add(request):
         form = NewTaskForm(request.POST)
         if form.is_valid():
             task_name = form.cleaned_data["task"]
-            description = form.cleaned_data["description"]
-            due_date = form.cleaned_data["due_date"]
-            completed = form.cleaned_data["completed"]
-            Task.objects.create(name=task_name, description=description, due_date=due_date, completed=completed)  # Create a new Task object and save it in the database
+            category = form.cleaned_data.get("category")  # Get the optional category
+            Task.objects.create(name=task_name, category=category)  # Save the Task with category if provided
             return HttpResponseRedirect(reverse("tasks:index"))
         else:
-            return render(request, "tasks/add.html", {
-                "form": form
-            })
-    return render(request, "tasks/add.html", {
-        "form": NewTaskForm()
-    })
+            return render(request, "tasks/add.html", {"form": form})
+    
+    return render(request, "tasks/add.html", {"form": NewTaskForm()})
 
 # API View to Get a List of Tasks
 def get_tasks(request):

@@ -4,6 +4,7 @@
 <head>
     <title>{% block title %}Task List{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'tasks/styles.css' %}">
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
     <header>
@@ -25,8 +26,7 @@
         </ul>
     {% endif %}
     <main>
-        {% block content %}
-        {% endblock %}
+        {% block content %}{% endblock %}
     </main>
 </body>
 </html>
