@@ -9,7 +9,7 @@ import json
 # Form class for adding a new task
 class NewTaskForm(forms.Form):
     task = forms.CharField(
-        label='New Task:',  
+        label='New task:',  
         widget=forms.TextInput(attrs={
             'autofocus': 'autofocus', 
             'id': 'task', 
