@@ -1,5 +1,6 @@
 {% extends "tasks/layout.html" %}
 {% load static %}
+{% load socialaccount %}
 {% block content %}
     <div class="login-container">
         <form action="{% url 'users:login' %}" method="post">

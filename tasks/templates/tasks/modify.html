@@ -23,10 +23,17 @@
     <label for="task-due-date">Due Date:</label>
     <input type="date" id="task-due-date" name="due_date"><br>
 
+    <label for="task-due-time">Due Time:</label>
+    <input type="time" id="task-due-time" name="due_time"><br>
+
+    <label for="task-category">Category:</label>
+    <input type="text" id="task-category" name="category"><br>
+
     <label for="task-completed">Completed:</label>
     <input type="checkbox" id="task-completed" name="completed"><br>
 
     <button type="submit">Update Task</button>
+    <button type="button" id="delete-btn" style="background-color: #dc3545; color: white;">Delete Task</button>
 </form>
 
 <a href="{% url 'tasks:index' %}">Back to Task List</a>
@@ -35,55 +42,73 @@
 document.addEventListener('DOMContentLoaded', () => {
     const taskSelect = document.getElementById('task-select');
     const form = document.getElementById('modify-form');
+    const deleteBtn = document.getElementById('delete-btn');
+    let currentTaskId = null;
 
-    // When a task is selected, fetch its details and populate the form
     taskSelect.addEventListener('change', async () => {
         const taskId = taskSelect.value;
-        console.log("Task selected:", taskId); //debugging log
+        currentTaskId = taskId;
         if (!taskId) {
             form.style.display = 'none';
             return;
         }
 
-        // Fetch task details from the server
         const response = await fetch(`/tasks/api/tasks/${taskId}/`);
-        
         if (response.ok) {
-            console.log('Fetched task details successfully');
             const task = await response.json();
             document.getElementById('task-name').value = task.name;
             document.getElementById('task-description').value = task.description || '';
             document.getElementById('task-due-date').value = task.due_date || '';
+            document.getElementById('task-due-time').value = task.due_time || ''; // New field
+            document.getElementById('task-category').value = task.category || ''; // New field
             document.getElementById('task-completed').checked = task.completed;
-            
             form.style.display = 'block';
+        }
+    });
 
-            // Attach the submit event to send a PUT request
-            form.onsubmit = async (e) => {
-                e.preventDefault();
-                const formData = {
-                    name: document.getElementById('task-name').value,
-                    description: document.getElementById('task-description').value,
-                    due_date: document.getElementById('task-due-date').value,
-                    completed: document.getElementById('task-completed').checked,
-                };
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = {
+            name: document.getElementById('task-name').value,
+            description: document.getElementById('task-description').value,
+            due_date: document.getElementById('task-due-date').value,
+            due_time: document.getElementById('task-due-time').value, // New field
+            category: document.getElementById('task-category').value, // New field
+            completed: document.getElementById('task-completed').checked,
+        };
 
-                const updateResponse = await fetch(`/tasks/api/tasks/update/${taskId}/`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                    },
-                    body: JSON.stringify(formData),
-                });
+        const updateResponse = await fetch(`/tasks/api/tasks/update/${currentTaskId}/`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify(formData),
+        });
 
-                if (updateResponse.ok) {
-                    alert('Task updated successfully!');
-                    location.reload();
-                } else {
-                    alert('Failed to update task.');
-                }
-            };
+        if (updateResponse.ok) {
+            alert('Task updated successfully!');
+            location.reload();
+        } else {
+            alert('Failed to update task.');
+        }
+    };
+
+    deleteBtn.addEventListener('click', async () => {
+        if (confirm('Are you sure you want to delete this task?')) {
+            const deleteResponse = await fetch(`/tasks/api/tasks/delete/${currentTaskId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+            });
+
+            if (deleteResponse.ok) {
+                alert('Task deleted successfully!');
+                location.reload();
+            } else {
+                alert('Failed to delete task.');
+            }
         }
     });
 });

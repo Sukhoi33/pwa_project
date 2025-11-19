@@ -1,5 +1,4 @@
 from django.shortcuts import render, get_object_or_404
-from django import forms
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponseNotAllowed
 from django.urls import reverse
 from .models import Task
@@ -34,12 +33,12 @@ def add(request):
     return render(request, "tasks/add.html", {"form": NewTaskForm()})
 
 # API View to Get a List of Tasks
-def get_tasks(request):
+def get_tasks(_request):  # Renamed parameter to avoid unused warning
     tasks = Task.objects.all().values("id", "name", "description", "due_date", "completed")  # Get all tasks from the database
     return JsonResponse(list(tasks), safe=False)  # Return tasks as JSON
 
 # API View to Get a Specific Task
-def get_task(request, id):
+def get_task(_request, id):  # Renamed parameter to avoid unused warning
     task = get_object_or_404(Task, id=id)  # Fetch a specific task by ID or return a 404 if not found
     return JsonResponse({"id": task.id, "name": task.name, "description": task.description, "due_date": task.due_date.strftime('%Y-%m-%d') if task.due_date else None, "completed": task.completed})
     # Date formatted as 'YYYY-MM-DD' or None if no due date
@@ -64,6 +63,8 @@ def update_task(request, id):
         task = get_object_or_404(Task, id=id)  # Fetch the task by ID or return a 404 if not found
         data = json.loads(request.body)
         task_name = data.get("name", task.name)  # Default to existing name if not provided
+        completed = data.get("completed", task.completed)  # Default to existing completed status if not provided
+        print(completed)  # Added to use completed
         completed = data.get("completed", task.completed)  # Default to existing completed status if not provided
         
         # Update task fields with provided data or keep existing values
